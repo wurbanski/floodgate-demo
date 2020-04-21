@@ -1,0 +1,9 @@
+{
+ "cloudProviders": "kubernetes",
+ "email": "contact@wurbanski.me",
+ "instancePort": 80,
+ "lastModifiedBy": "admin",
+ "name": "demo-2",
+ "trafficGuards": [],
+ "user": "admin"
+}

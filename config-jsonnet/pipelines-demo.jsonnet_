@@ -1,0 +1,40 @@
+local pipeline = import "pipeline.libsonnet";
+
+local apps = ["demo-1", "demo-2", "demo-3"];
+local emailPipelineNotification = pipeline.notification
+                                  .withAddress('someone@example.com')
+                                  .withCC('test@example.com')
+                                  .withLevel('pipeline')
+                                  .withType('email')
+                                  .withWhen('pipeline.starting');
+
+[
+  local name = 'Placeholder for spinnaker-%s' % [app,];
+  local artifact = pipeline.artifacts
+                   .dockerImage()
+                   .withName('docker-spinnaker-%s' % [app,])
+                   .withReference('index.docker.io/wurbanski/spinnaker-demo')
+                   .withVersion(app);
+
+  local expectedArtifact = pipeline.expectedArtifact('expected-artifact')
+                           .withDefaultArtifact(artifact)
+                           .withMatchArtifact(artifact)
+                           .withUseDefaultArtifact(true);
+
+  local dockerTrigger = pipeline.triggers
+                        .docker('docker-trigger')
+                        .withAccount('my-docker-registry')
+                        .withExpectedArtifacts([expectedArtifact])
+                        .withOrganization('wurbanski')
+                        .withRegistry('my-docker-registry')
+                        .withRepository('wurbanski/spinnaker-demo')
+                        .withTag(app);
+  pipeline.pipeline()
+  .withName(name)
+  .withApplication(app)
+  .withId('deploy-jsonnet-%s' % [app,])
+  .withExpectedArtifacts(expectedArtifact)
+  .withTriggers([dockerTrigger])
+  .withNotifications([emailPipelineNotification])
+  for app in apps
+]
